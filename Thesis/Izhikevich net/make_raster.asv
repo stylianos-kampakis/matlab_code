@@ -1,0 +1,10 @@
+function x=make_raster(action_series)
+
+matrix=cell2mat(action_series);
+
+timesteps=1:1:size(matrix,2);
+neurons=1:1:size(matrix,1);
+
+for 
+
+end

@@ -1,0 +1,7 @@
+function x=normin(in,out)
+
+all_data=[resize(in,numel(in),1) resize(out,numel(out),1)];
+
+normali
+
+end

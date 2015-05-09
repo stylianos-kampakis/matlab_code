@@ -1,0 +1,7 @@
+function options=izknet_options(options_set)
+
+options=struct(type,...
+    purpose,...
+    ms,cost_matrix,a,b,c,d,amplifier,voltage_sent,sensor_ranges,std_constant,regression_matrix,output_layer,number_of_inputs,sensor_neurons_distribution
+
+end

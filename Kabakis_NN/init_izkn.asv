@@ -1,0 +1,197 @@
+function net=init_izkn(layers,type,purpose,ms,cost_matrix,a,b,c,d,...
+    amplifier,voltage_sent,sensor_ranges,std_constant,...
+    regression_matrix,output_layer,number_of_inputs,...
+    sensor_neurons_distribution)
+
+net.number_of_sensor_neurons=layers(1);
+net.number_of_output_neurons=layers(numel(layers));
+number_of_sensor_neurons=net.number_of_sensor_neurons;
+number_of_output_neurons=net.number_of_output_neurons;
+
+if nargin<2 || isempty(type)
+   net.type='feedforward';
+else
+    net.type=type;
+end
+
+if nargin<3 || isempty(purpose)
+   net.purpose='classification';
+else
+   net.purpose=purpose;
+end
+
+if nargin<4 || isempty(ms)
+   net.ms=100;
+else
+   net.ms=ms;
+end
+
+%**************Cost matrix******
+%true positive, true negative, false positive, false negative
+
+if nargin<5 || isempty(cost_matrix)
+   net.cost_matrix=[1 1 1 1];
+else
+   net.cost_matrix=cost_matrix;
+end
+
+
+
+if nargin<6 || isempty(a)
+   net.a=0.045; 
+else
+   net.a=a;
+end
+
+if nargin<7 || isempty(b)
+   net.b=0.2;
+else
+   net.b=b;
+end
+
+if nargin<8 || isempty(c)
+   net.c=-65; 
+else
+   net.c=c;
+end
+
+if nargin<9 || isempty(d)
+   net.d=5; 
+else
+   net.d=d;
+end
+
+if nargin<10 || isempty(amplifier)
+   net.amplifier=30;
+else
+   net.amplifier=amplifier;
+end
+
+if nargin<11 || isempty(voltage_sent)
+   net.voltage_sent=60;
+else
+   net.voltage_sent=voltage_sent;
+end
+
+if nargin<12 || isempty(sensor_ranges)
+   net.sensor_ranges=[zeros(net.number_of_inputs,1) ones(net.number_of_inputs,1)];
+else
+   net.sensor_ranges=sensor_ranges;
+end
+
+if nargin<13 || isempty(std_constant)
+   net.std_constant=2.5;
+else
+   net.std_constant=std_constant;
+end
+%argument 14=regression matrix covered below
+
+if nargin<15 || isempty(output_layer)
+   net.output_layer=numel(layers);
+else
+   net.output_layer=output_layer;
+end
+
+if nargin<16 || isempty(number_of_inputs)
+   net.number_of_inputs=1;
+else
+   net.number_of_inputs=number_of_inputs;
+end
+
+if nargin<17 || isempty(sensor_neurons_distribution)
+    if net.number_of_inputs>1
+        net.sensor_neurons_distribution=[];
+        seperator=round(net.number_of_sensor_neurons/net.number_of_inputs);
+        
+        for i=1:net.number_of_inputs
+           
+            net.sensor_neurons_distribution=[
+               net.sensor_neurons_distribution seperator];
+            
+        end
+        
+    if sum(net.sensor_neurons_distribution)>net.number_of_sensor_neurons
+        i=numel(net.sensor_neurons_distribution);
+        while sum(net.sensor_neurons_distribution)>net.number_of_sensor_neurons
+        net.sensor_neurons_distribution(i)=...
+         net.sensor_neurons_distribution(i)-1; 
+        i=i-1;
+        end
+   
+        
+    elseif sum(net.sensor_neurons_distribution)<net.number_of_sensor_neurons
+        i=numel(net.sensor_neurons_distribution);
+        while sum(net.sensor_neurons_distribution)<net.number_of_sensor_neurons
+        net.sensor_neurons_distribution(i)=...
+         net.sensor_neurons_distribution(i)+1; 
+        i=i-1;
+        end  
+    end
+    
+    
+    
+elseif net.number_of_inputs==1 
+   net.sensor_neurons_distribution=net.number_of_sensor_neurons;
+else
+   net.sensor_neurons_distribution=sensor_neurons_distribution;
+    end
+
+end
+%************Split the input space into gaussian functions with uniform
+%************distributions*********************
+net.sensor_parameters=[];
+
+for k=1:net.number_of_inputs
+centers=[];
+centers(1)=net.sensor_ranges(k,1);
+previous_mean=net.sensor_ranges(k,1);
+
+for i=1:number_of_sensor_neurons-1
+    centers=[centers;previous_mean+(net.sensor_ranges(k,2)-net.sensor_ranges(k,1))/(number_of_sensor_neurons-1)];
+    previous_mean=centers(i+1);
+end
+
+%The standard deviation of the sensor neurons
+stdev=1/(number_of_sensor_neurons*net.std_constant);
+
+%The parameters of the sensor neurons
+net.sensor_parameters=[net.sensor_parameters ; stdev*ones(number_of_sensor_neurons,1) centers ];
+% 
+end
+
+
+if nargin<15 || isempty(regression_matrix)
+
+centers=[];
+centers(1)=net.sensor_ranges(2);
+previous_mean=net.sensor_ranges(2);
+
+for i=1:number_of_output_neurons-1
+    centers=[centers;previous_mean+(net.sensor_ranges(4)-net.sensor_ranges(2))/(number_of_output_neurons-1)];
+    previous_mean=centers(i+1);
+end
+
+    net.regression_matrix=centers;
+
+else
+    
+    net.regression_matrix=regression_matrix;
+
+end
+
+
+%***********Now make the weights of the layers
+
+
+for i=1:numel(layers)-1
+   
+    layer_weights{i}=rand(layers(i+1),layers(i));
+    
+end
+
+layer_weights{numel(layers)}=zeros(layers(1),layers(numel(layers)));
+
+net.layer_weights=layer_weights;
+net.layers=layers;
+
+end
